@@ -1,0 +1,16 @@
+data-path="datadir"
+genesis-file="chaindata/excelcoin_mainnet.json"
+network-id=24601
+p2p-enabled=false
+rpc-http-enabled=true
+# TODO(zhuowei): disable unused http apis in prod; enable ws and GraphQL?
+# TODO(zhuowei): fix
+host-allowlist=[
+  "localhost",
+]
+rpc-http-cors-origins=[
+  "http://localhost:8000",
+  "https://excelcoin.org",
+  "chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn", # MetaMask
+  "https://remix.ethereum.org",
+]
