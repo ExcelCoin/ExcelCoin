@@ -1,6 +1,8 @@
 package org.excelcoin.besu;
 
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
@@ -13,6 +15,7 @@ import org.hyperledger.besu.plugin.services.storage.SegmentIdentifier;
 
 public class ExcelCoinKeyValueStorage implements KeyValueStorage {
   private final SegmentIdentifier segmentIdentifier;
+  private final Map<Bytes, byte[]> inMemory = new HashMap<>();
 
   public ExcelCoinKeyValueStorage(SegmentIdentifier segmentIdentifier) {
     this.segmentIdentifier = segmentIdentifier;
@@ -28,14 +31,14 @@ public class ExcelCoinKeyValueStorage implements KeyValueStorage {
   public boolean containsKey(byte[] key) {
     System.out.println(segmentIdentifier + " containsKey Key: " + Bytes.wrap(key).toHexString());
     Thread.dumpStack();
-    return false;
+    return inMemory.containsKey(translateKey(key));
   }
 
   @Override
   public Optional<byte[]> get(byte[] key) {
     System.out.println(segmentIdentifier + " get Key: " + Bytes.wrap(key).toHexString());
     Thread.dumpStack();
-    return Optional.empty();
+    return Optional.ofNullable(inMemory.get(translateKey(key)));
   }
 
   @Override
@@ -63,12 +66,38 @@ public class ExcelCoinKeyValueStorage implements KeyValueStorage {
   public KeyValueStorageTransaction startTransaction() {
     System.out.println(segmentIdentifier + " start transaction");
     Thread.dumpStack();
-    return new ExcelCoinKeyValueStorageTransaction(segmentIdentifier);
+    return new ExcelCoinKeyValueStorageTransaction(this, segmentIdentifier);
   }
 
   @Override
   public void close() {
     System.out.println(segmentIdentifier + " close");
     Thread.dumpStack();
+  }
+
+  Bytes translateKey(byte[] key) {
+    Bytes keyBytes = Bytes.wrap(key);
+    if (segmentIdentifier.getName().equals("ACCOUNT_INFO_STATE")) {
+      byte[] account = ExcelCoinWrappedDigest.WrappedKeccak256Digest.hashToInput.get(keyBytes);
+      if (account == null) {
+        throw new RuntimeException("We can't reverse account hash!");
+      }
+      Bytes newKeyBytes = Bytes.wrap(account);
+      System.out.println(
+          "Translating hashed key "
+              + keyBytes.toHexString()
+              + " to unhashed "
+              + newKeyBytes.toHexString());
+      keyBytes = newKeyBytes;
+    }
+    return keyBytes;
+  }
+
+  void put(byte[] key, byte[] value) {
+    inMemory.put(translateKey(key), value);
+  }
+
+  void remove(byte[] key) {
+    inMemory.remove(translateKey(key));
   }
 }

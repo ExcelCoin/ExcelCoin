@@ -23,6 +23,7 @@ repositories {
 dependencies {
     // This dependency is used by the application.
     implementation 'org.hyperledger.besu:plugin-api:22.1.0-RC1'
+    implementation 'org.bouncycastle:bcprov-jdk15on:1.70'
 }
 
 testing {
