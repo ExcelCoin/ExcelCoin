@@ -17,7 +17,11 @@ public class ExcelCoinKeyValueStorageFactory implements KeyValueStorageFactory {
       // TODO(zhuowei): build a fake blockchain
       return inMemoryFactory.create(segment, configuration, metricsSystem);
     }
-    return new ExcelCoinKeyValueStorage(segment);
+    if (segment.getName().equals("ACCOUNT_INFO_STATE")
+        || segment.getName().equals("TRIE_BRANCH_STORAGE")) {
+      return new ExcelCoinKeyValueStorage(segment);
+    }
+    return new ExcelCoinWebScaleKeyValueStorage();
   }
 
   public String getName() {
